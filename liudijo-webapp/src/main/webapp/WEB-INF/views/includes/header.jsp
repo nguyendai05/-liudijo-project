@@ -1,41 +1,51 @@
-<%@ page contentType="text/html; charset=UTF-8" %>
-<% String ctx = request.getContextPath(); %>
-<!-- Header -->
-<header class="site-header">
-    <div class="container">
-        <div class="header-content">
-            <a class="logo" href="<%=ctx%>/">
-                <i class="fas fa-shopping-bag"></i>
-                <span>Liudijo</span>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+
+<header class="header">
+    <nav class="navbar">
+        <div class="logo">
+            <!--
+              SỬA LỖI: Đã xóa ${pageContext.request.contextPath}
+              Thẻ <base> trong head.jsp sẽ tự động xử lý.
+              href="/" sẽ trỏ về trang chủ của webapp.
+            -->
+            <a href="/">
+                <img src="assets/images/logo.png" alt="LiuDijo Logo">
+            </a>
+        </div>
+
+        <ul class="nav-links">
+            <!-- SỬA LỖI: Đã dọn dẹp tất cả các link -->
+            <li><a href="/">Trang chủ</a></li>
+            <li><a href="products">Sản phẩm</a></li>
+            <!-- Thêm các link khác nếu có -->
+        </ul>
+
+        <div class="nav-icons">
+            <a href="cart" class="nav-icon">
+                <!-- Icon giỏ hàng (ví dụ: Font Awesome) -->
+                <span>Giỏ hàng</span>
             </a>
 
-            <nav class="main-nav">
-                <a href="<%=ctx%>/">Trang chủ</a>
-                <a href="<%=ctx%>/products">Sản phẩm</a>
-                <a href="<%=ctx%>/products?type=ACCOUNT">Tài khoản</a>
-                <a href="<%=ctx%>/products?type=KEY">Key phần mềm</a>
-                <a href="<%=ctx%>/products?type=SERVICE">Dịch vụ</a>
-            </nav>
+            <!-- Kiểm tra xem người dùng đã đăng nhập chưa -->
+            <c:if test="${empty sessionScope.user}">
+                <a href="login" class="nav-icon">Đăng nhập</a>
+                <a href="register" class="nav-icon">Đăng ký</a>
+            </c:if>
 
-            <div class="header-actions">
-                <form action="<%=ctx%>/products" method="get" class="search-form">
-                    <input type="search" name="q" placeholder="Tìm kiếm sản phẩm..." class="search-input">
-                    <button type="submit" class="search-btn"><i class="fas fa-search"></i></button>
-                </form>
-
-                <a href="<%=ctx%>/cart" class="cart-link">
-                    <i class="fas fa-shopping-cart"></i>
-                    <span class="cart-badge">0</span>
+            <c:if test="${not empty sessionScope.user}">
+                <!-- Hiển thị tên người dùng hoặc link dashboard -->
+                <a href="customer/dashboard" class="nav-icon">
+                    Chào, ${sessionScope.user.firstName}
                 </a>
+                <!-- Link Đăng xuất -->
+                <a href="logout" class="nav-icon">Đăng xuất</a>
 
-                <% if (session.getAttribute("user") != null) { %>
-                    <a href="<%=ctx%>/customer/dashboard" class="btn-account">
-                        <i class="fas fa-user"></i> Tài khoản
-                    </a>
-                <% } else { %>
-                    <a href="<%=ctx%>/auth/login" class="btn-login">Đăng nhập</a>
-                <% } %>
-            </div>
+                <!-- Hiển thị link Admin nếu là admin -->
+                <c:if test="${sessionScope.user.role == 'ADMIN'}">
+                    <a href="admin/dashboard" class="nav-icon">Admin</a>
+                </c:if>
+            </c:if>
         </div>
-    </div>
+    </nav>
 </header>
