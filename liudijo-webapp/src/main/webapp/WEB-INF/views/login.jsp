@@ -1,32 +1,60 @@
 <%@ page contentType="text/html; charset=UTF-8" %>
 <!DOCTYPE html>
-<html lang="vi"><head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Đăng nhập - liudijo</title>
-<% String ctx = request.getContextPath(); %>
-<link rel="stylesheet" href="<%=ctx%>/assets/css/style.css">
-</head><body>
-<header class="site-header">
-  <a class="logo" href="<%=ctx%>/"><img src="<%=ctx%>/assets/images/logo.png" alt="liudijo" height="28"></a>
-  <nav class="nav">
-    <a href="<%=ctx%>/products">Sản phẩm</a>
-    <a href="<%=ctx%>/cart">Giỏ hàng</a>
-    <a href="<%=ctx%>/auth/login">Đăng nhập</a>
-  </nav>
-</header>
-<main class="container">
+<html lang="vi">
+<head>
+    <% String ctx = request.getContextPath(); %>
+    <%@ include file="includes/head.jsp" %>
+    <title>Đăng nhập - Liudijo</title>
+</head>
+<body>
+    <%@ include file="includes/header.jsp" %>
 
-<h1>Đăng nhập</h1>
-<% if (request.getAttribute("error") != null) { %>
-  <p class="error"><%= request.getAttribute("error") %></p>
-<% } %>
-<form method="post" action="<%=ctx%>/auth/login">
-  <label>Email <input type="email" name="email" required></label>
-  <label>Mật khẩu <input type="password" name="password" required></label>
-  <button class="btn">Đăng nhập</button>
-</form>
-<p>Chưa có tài khoản? <a href="<%=ctx%>/auth/register">Đăng ký</a></p>
+    <main class="auth-page">
+        <div class="container">
+            <div class="page-header">
+                <h1 class="page-title">
+                    <i class="fas fa-sign-in-alt"></i> Đăng nhập
+                </h1>
+                <p class="page-subtitle">Chào mừng bạn quay trở lại</p>
+            </div>
 
-</main>
-<script src="<%=ctx%>/assets/js/main.js"></script>
-</body></html>
+            <div class="auth-container">
+                <% if (request.getAttribute("error") != null) { %>
+                <div class="alert alert-error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <%= request.getAttribute("error") %>
+                </div>
+                <% } %>
+
+                <form method="post" action="<%=ctx%>/auth/login" class="auth-form">
+                    <div class="form-group">
+                        <label for="email">
+                            <i class="fas fa-envelope"></i> Email
+                        </label>
+                        <input type="email" id="email" name="email" placeholder="Nhập email của bạn" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">
+                            <i class="fas fa-lock"></i> Mật khẩu
+                        </label>
+                        <input type="password" id="password" name="password" placeholder="Nhập mật khẩu" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-auth">
+                        <i class="fas fa-sign-in-alt"></i> Đăng nhập
+                    </button>
+                </form>
+
+                <div class="auth-links">
+                    <p>Chưa có tài khoản? <a href="<%=ctx%>/auth/register">Đăng ký ngay</a></p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <%@ include file="includes/footer.jsp" %>
+
+    <script src="<%=ctx%>/assets/js/main.js"></script>
+</body>
+</html>
