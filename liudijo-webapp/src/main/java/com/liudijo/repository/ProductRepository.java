@@ -9,11 +9,57 @@ import java.util.List;
 
 public class ProductRepository {
     public List<Product> listActive(int limit, int offset, String q, String type) {
+        return listActive(limit, offset, q, type, null, null);
+    }
+
+    public List<Product> listActive(int limit, int offset, String q, String type, String sort, String priceRange) {
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT ProductId, Name, Slug, Type, Price, SalePrice, IsActive FROM Products WHERE IsActive=1 ");
         if (q != null && !q.isEmpty()) sb.append(" AND Name LIKE ? ");
         if (type != null && !type.isEmpty()) sb.append(" AND Type = ? ");
-        sb.append(" ORDER BY ProductId DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY ");
+
+        // Price range filter
+        if (priceRange != null && !priceRange.isEmpty()) {
+            switch (priceRange) {
+                case "0-50000":
+                    sb.append(" AND COALESCE(SalePrice, Price) >= 0 AND COALESCE(SalePrice, Price) < 50000 ");
+                    break;
+                case "50000-100000":
+                    sb.append(" AND COALESCE(SalePrice, Price) >= 50000 AND COALESCE(SalePrice, Price) < 100000 ");
+                    break;
+                case "100000-200000":
+                    sb.append(" AND COALESCE(SalePrice, Price) >= 100000 AND COALESCE(SalePrice, Price) < 200000 ");
+                    break;
+                case "200000-":
+                    sb.append(" AND COALESCE(SalePrice, Price) >= 200000 ");
+                    break;
+            }
+        }
+
+        // Sorting
+        String orderBy = "ProductId DESC"; // Default: newest
+        if (sort != null && !sort.isEmpty()) {
+            switch (sort) {
+                case "price_asc":
+                    orderBy = "COALESCE(SalePrice, Price) ASC";
+                    break;
+                case "price_desc":
+                    orderBy = "COALESCE(SalePrice, Price) DESC";
+                    break;
+                case "name_asc":
+                    orderBy = "Name ASC";
+                    break;
+                case "bestseller":
+                    orderBy = "ProductId ASC"; // Placeholder for actual bestseller logic
+                    break;
+                case "newest":
+                default:
+                    orderBy = "ProductId DESC";
+                    break;
+            }
+        }
+
+        sb.append(" ORDER BY ").append(orderBy).append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY ");
         List<Product> list = new ArrayList<>();
         try (Connection c = DBConnection.getConnection();
              PreparedStatement ps = c.prepareStatement(sb.toString())) {
@@ -37,6 +83,44 @@ public class ProductRepository {
             }
         } catch (SQLException e) { throw new RuntimeException(e); }
         return list;
+    }
+
+    public int countActive(String q, String type, String priceRange) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("SELECT COUNT(*) FROM Products WHERE IsActive=1 ");
+        if (q != null && !q.isEmpty()) sb.append(" AND Name LIKE ? ");
+        if (type != null && !type.isEmpty()) sb.append(" AND Type = ? ");
+
+        // Price range filter
+        if (priceRange != null && !priceRange.isEmpty()) {
+            switch (priceRange) {
+                case "0-50000":
+                    sb.append(" AND COALESCE(SalePrice, Price) >= 0 AND COALESCE(SalePrice, Price) < 50000 ");
+                    break;
+                case "50000-100000":
+                    sb.append(" AND COALESCE(SalePrice, Price) >= 50000 AND COALESCE(SalePrice, Price) < 100000 ");
+                    break;
+                case "100000-200000":
+                    sb.append(" AND COALESCE(SalePrice, Price) >= 100000 AND COALESCE(SalePrice, Price) < 200000 ");
+                    break;
+                case "200000-":
+                    sb.append(" AND COALESCE(SalePrice, Price) >= 200000 ");
+                    break;
+            }
+        }
+
+        try (Connection c = DBConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement(sb.toString())) {
+            int idx = 1;
+            if (q != null && !q.isEmpty()) ps.setString(idx++, "%" + q + "%");
+            if (type != null && !type.isEmpty()) ps.setString(idx++, type);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return 0;
     }
 
     public Product findBySlug(String slug) {
