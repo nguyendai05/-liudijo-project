@@ -1,79 +1,68 @@
 package com.liudijo.controller;
 
+import com.liudijo.model.CartItem;
 import com.liudijo.model.Product;
 import com.liudijo.service.ProductService;
 
-import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.math.BigDecimal;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-@WebServlet("/cart")
+@WebServlet(name="CartServlet", urlPatterns={"/cart"})
 public class CartServlet extends HttpServlet {
+    private final ProductService productService = new ProductService();
 
-    private ProductService productService;
-
-    @Override
-    public void init() throws ServletException {
-        productService = new ProductService();
+    @SuppressWarnings("unchecked")
+    private Map<Long, CartItem> getCart(HttpSession session) {
+        Map<Long, CartItem> cart = (Map<Long, CartItem>) session.getAttribute("CART");
+        if (cart == null) {
+            cart = new LinkedHashMap<>();
+            session.setAttribute("CART", cart);
+        }
+        return cart;
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-
-        HttpSession session = request.getSession();
-        @SuppressWarnings("unchecked")
-        List<Long> cartItems = (List<Long>) session.getAttribute("cart");
-
-        if (cartItems == null) {
-            cartItems = new ArrayList<>();
-        }
-
-        List<Product> products = new ArrayList<>();
-        for (Long productId : cartItems) {
-            Product product = productService.getProductById(productId);
-            if (product != null) {
-                products.add(product);
-            }
-        }
-
-        request.setAttribute("cartProducts", products);
-        request.getRequestDispatcher("/WEB-INF/views/cart.jsp").forward(request, response);
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.getRequestDispatcher("/WEB-INF/views/cart.jsp").forward(req, resp);
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-
-        String action = request.getParameter("action");
-        String productIdStr = request.getParameter("productId");
-
-        if (productIdStr != null) {
-            Long productId = Long.parseLong(productIdStr);
-            HttpSession session = request.getSession();
-
-            @SuppressWarnings("unchecked")
-            List<Long> cart = (List<Long>) session.getAttribute("cart");
-            if (cart == null) {
-                cart = new ArrayList<>();
-                session.setAttribute("cart", cart);
-            }
-
-            if ("add".equals(action)) {
-                if (!cart.contains(productId)) {
-                    cart.add(productId);
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        HttpSession session = req.getSession(true);
+        Map<Long, CartItem> cart = getCart(session);
+        String action = req.getParameter("action");
+        if ("add".equals(action)) {
+            long productId = Long.parseLong(req.getParameter("productId"));
+            int qty = Integer.parseInt(req.getParameter("qty"));
+            Product p = productService.getById(productId);
+            if (p != null) {
+                CartItem ci = cart.get(productId);
+                if (ci == null) {
+                    ci = new CartItem(productId, p.getName(), p.getSalePrice()!=null?p.getSalePrice():p.getPrice(), qty);
+                } else {
+                    ci.setQuantity(ci.getQuantity() + qty);
                 }
-            } else if ("remove".equals(action)) {
-                cart.remove(productId);
+                cart.put(productId, ci);
             }
+        } else if ("remove".equals(action)) {
+            long productId = Long.parseLong(req.getParameter("productId"));
+            cart.remove(productId);
+        } else if ("update".equals(action)) {
+            long productId = Long.parseLong(req.getParameter("productId"));
+            int qty = Integer.parseInt(req.getParameter("qty"));
+            CartItem ci = cart.get(productId);
+            if (ci != null) ci.setQuantity(qty);
+        } else if ("clear".equals(action)) {
+            cart.clear();
         }
-
-        response.sendRedirect(request.getContextPath() + "/cart");
+        resp.sendRedirect(req.getContextPath() + "/cart");
     }
 }

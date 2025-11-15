@@ -4,42 +4,29 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+/** Simple JDBC connection helper for SQL Server. */
 public class DBConnection {
-    private static final String URL = "jdbc:mysql://localhost:3306/liudijo_db";
-    private static final String USERNAME = "root";
-    private static final String PASSWORD = "";
-    private static final String DRIVER = "com.mysql.cj.jdbc.Driver";
+    private static final String URL = System.getenv().getOrDefault("DB_URL",
+        "jdbc:sqlserver://localhost:15000;databaseName=liudijo;encrypt=true;trustServerCertificate=true");
+    private static final String USER = System.getenv().getOrDefault("DB_USER", "sa");
+    private static final String PASS = System.getenv().getOrDefault("DB_PASS", "StrongPassword!");
 
     static {
         try {
-            Class.forName(DRIVER);
+            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
         } catch (ClassNotFoundException e) {
-            throw new RuntimeException("MySQL JDBC Driver not found", e);
+            throw new RuntimeException("SQLServerDriver not found", e);
         }
     }
 
     public static Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(URL, USERNAME, PASSWORD);
-    }
+        String url  = "jdbc:sqlserver://localhost:15000;"
+                + "databaseName=liudijo;"
+                + "encrypt=true;"
+                + "trustServerCertificate=true;";
+        String user = "sa";
+        String pass = "kjm03459119479dp@";   // ĐỔI THÀNH MẬT KHẨU THẬT CỦA BẠN
 
-    public static void closeConnection(Connection connection) {
-        if (connection != null) {
-            try {
-                connection.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    public static void testConnection() {
-        try (Connection conn = getConnection()) {
-            if (conn != null) {
-                System.out.println("Database connection successful!");
-            }
-        } catch (SQLException e) {
-            System.err.println("Database connection failed!");
-            e.printStackTrace();
-        }
+        return DriverManager.getConnection(url, user, pass);
     }
 }

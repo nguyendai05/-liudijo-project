@@ -1,70 +1,38 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ page contentType="text/html; charset=UTF-8" %>
 <!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${product.name} - Liudijo</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
-</head>
-<body>
-    <header>
-        <nav>
-            <div class="container">
-                <h1>Liudijo</h1>
-                <ul>
-                    <li><a href="${pageContext.request.contextPath}/">Trang chủ</a></li>
-                    <li><a href="${pageContext.request.contextPath}/products">Sản phẩm</a></li>
-                </ul>
-            </div>
-        </nav>
-    </header>
+<html lang="vi"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chi tiết sản phẩm - liudijo</title>
+<% String ctx = request.getContextPath(); %>
+<link rel="stylesheet" href="<%=ctx%>/assets/css/style.css">
+</head><body>
+<header class="site-header">
+  <a class="logo" href="<%=ctx%>/"><img src="<%=ctx%>/assets/images/logo.png" alt="liudijo" height="28"></a>
+  <nav class="nav">
+    <a href="<%=ctx%>/products">Sản phẩm</a>
+    <a href="<%=ctx%>/cart">Giỏ hàng</a>
+    <a href="<%=ctx%>/auth/login">Đăng nhập</a>
+  </nav>
+</header>
+<main class="container">
 
-    <main>
-        <div class="container">
-            <div class="product-detail">
-                <div class="product-image">
-                    <img src="${product.imageUrl}" alt="${product.name}">
-                </div>
+<% com.liudijo.model.Product p = (com.liudijo.model.Product) request.getAttribute("product"); %>
+<% if (p == null) { %>
+  <h1>Không tìm thấy sản phẩm</h1>
+<% } else { %>
+<article class="product-detail">
+  <h1><%= p.getName() %></h1>
+  <p>Loại: <%= p.getType() %></p>
+  <p>Giá: <strong><%= p.getSalePrice()!=null?p.getSalePrice():p.getPrice() %> ₫</strong></p>
+  <form action="<%=ctx%>/cart" method="post">
+    <input type="hidden" name="action" value="add">
+    <input type="hidden" name="productId" value="<%= p.getProductId() %>">
+    <label>Số lượng <input type="number" name="qty" value="1" min="1"></label>
+    <button class="btn">Thêm vào giỏ</button>
+  </form>
+</article>
+<% } %>
 
-                <div class="product-info">
-                    <h2>${product.name}</h2>
-                    <p class="price">${product.price} VNĐ</p>
-
-                    <div class="product-specs">
-                        <p><strong>Danh mục:</strong> ${product.category}</p>
-                        <p><strong>Rank:</strong> ${product.rank}</p>
-                        <p><strong>Server:</strong> ${product.server}</p>
-                        <p><strong>Số tướng:</strong> ${product.championCount}</p>
-                        <p><strong>Số skin:</strong> ${product.skinCount}</p>
-                    </div>
-
-                    <div class="product-description">
-                        <h3>Mô tả</h3>
-                        <p>${product.description}</p>
-                    </div>
-
-                    <c:choose>
-                        <c:when test="${product.available}">
-                            <a href="${pageContext.request.contextPath}/checkout?productId=${product.id}"
-                               class="btn btn-primary btn-large">Mua ngay</a>
-                        </c:when>
-                        <c:otherwise>
-                            <button class="btn btn-disabled" disabled>Đã bán</button>
-                        </c:otherwise>
-                    </c:choose>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <footer>
-        <div class="container">
-            <p>&copy; 2024 Liudijo. All rights reserved.</p>
-        </div>
-    </footer>
-
-    <script src="${pageContext.request.contextPath}/assets/js/main.js"></script>
-</body>
-</html>
+</main>
+<script src="<%=ctx%>/assets/js/main.js"></script>
+</body></html>

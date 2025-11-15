@@ -1,217 +1,55 @@
 package com.liudijo.service;
 
-import com.liudijo.model.Order;
-import com.liudijo.model.Product;
-import com.liudijo.util.DBConnection;
-import com.liudijo.util.EmailUtil;
+import com.liudijo.model.*;
+import com.liudijo.repository.OrderRepository;
+import com.liudijo.repository.ProductRepository;
+import com.liudijo.repository.StockRepository;
 
-import java.sql.*;
-import java.util.ArrayList;
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 public class OrderService {
-    private final ProductService productService;
+    private final OrderRepository orderRepo = new OrderRepository();
+    private final StockRepository stockRepo = new StockRepository();
+    private final ProductRepository productRepo = new ProductRepository();
 
-    public OrderService() {
-        this.productService = new ProductService();
+    public long createFromCart(long userId, Map<Long, CartItem> cart, String paymentMethod) {
+        if (cart == null || cart.isEmpty()) throw new IllegalStateException("Cart is empty");
+        BigDecimal total = BigDecimal.ZERO;
+        for (CartItem ci : cart.values()) total = total.add(ci.getSubtotal());
+
+        Order o = new Order();
+        o.setUserId(userId);
+        o.setPaymentMethod(paymentMethod);
+        o.setTotal(total);
+        long orderId = orderRepo.createOrder(o);
+
+        for (CartItem ci : cart.values()) {
+            OrderItem it = new OrderItem();
+            it.setOrderId(orderId);
+            it.setProductId(ci.getProductId());
+            it.setUnitPrice(ci.getPrice());
+            it.setQuantity(ci.getQuantity());
+            long orderItemId = orderRepo.addItem(it);
+
+            // For SERVICE, no stock assignment at this stage (only after paid)
+            // For ACCOUNT/KEY: assignment after markPaid
+        }
+        return orderId;
     }
 
-    /**
-     * Create a new order
-     */
-    public Long createOrder(Long userId, Long productId, String paymentMethod,
-                           String deliveryEmail, String deliveryPhone, String note) {
-        // Check if product is available
-        if (!productService.isProductAvailable(productId)) {
-            return null;
-        }
-
-        Product product = productService.getProductById(productId);
-        if (product == null) {
-            return null;
-        }
-
-        String sql = "INSERT INTO orders (user_id, product_id, total_amount, payment_method, " +
-                     "payment_status, order_status, delivery_email, delivery_phone, note, created_at) " +
-                     "VALUES (?, ?, ?, ?, 'PENDING', 'PENDING', ?, ?, ?, NOW())";
-
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            stmt.setLong(1, userId);
-            stmt.setLong(2, productId);
-            stmt.setBigDecimal(3, product.getPrice());
-            stmt.setString(4, paymentMethod);
-            stmt.setString(5, deliveryEmail);
-            stmt.setString(6, deliveryPhone);
-            stmt.setString(7, note);
-
-            int affectedRows = stmt.executeUpdate();
-            if (affectedRows > 0) {
-                ResultSet generatedKeys = stmt.getGeneratedKeys();
-                if (generatedKeys.next()) {
-                    Long orderId = generatedKeys.getLong(1);
-
-                    // Mark product as reserved
-                    productService.markAsReserved(productId);
-
-                    // Send order confirmation email
-                    EmailUtil.sendOrderConfirmation(deliveryEmail, orderId.toString(), product.getName());
-
-                    return orderId;
+    public void markPaidAndFulfill(long orderId, String paymentRef) {
+        orderRepo.markPaid(orderId, paymentRef);
+        // Read items and assign stock for ACCOUNT/KEY
+        List<OrderItem> items = orderRepo.itemsOf(orderId);
+        for (OrderItem it : items) {
+            Product p = productRepo.findById(it.getProductId());
+            if (p != null && ( "ACCOUNT".equals(p.getType()) || "KEY".equals(p.getType()) )) {
+                for (int i = 0; i < it.getQuantity(); i++) {
+                    stockRepo.assignOne(it.getProductId(), it.getOrderItemId()); // one per quantity
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
-        return null;
-    }
-
-    /**
-     * Get order by ID
-     */
-    public Order getOrderById(Long orderId) {
-        String sql = "SELECT o.*, u.username, p.name as product_name " +
-                     "FROM orders o " +
-                     "JOIN users u ON o.user_id = u.id " +
-                     "JOIN products p ON o.product_id = p.id " +
-                     "WHERE o.id = ?";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setLong(1, orderId);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return extractOrderFromResultSet(rs);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    /**
-     * Get orders by user ID
-     */
-    public List<Order> getOrdersByUserId(Long userId) {
-        List<Order> orders = new ArrayList<>();
-        String sql = "SELECT o.*, u.username, p.name as product_name " +
-                     "FROM orders o " +
-                     "JOIN users u ON o.user_id = u.id " +
-                     "JOIN products p ON o.product_id = p.id " +
-                     "WHERE o.user_id = ? ORDER BY o.created_at DESC";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setLong(1, userId);
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                orders.add(extractOrderFromResultSet(rs));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return orders;
-    }
-
-    /**
-     * Get all orders (admin only)
-     */
-    public List<Order> getAllOrders() {
-        List<Order> orders = new ArrayList<>();
-        String sql = "SELECT o.*, u.username, p.name as product_name " +
-                     "FROM orders o " +
-                     "JOIN users u ON o.user_id = u.id " +
-                     "JOIN products p ON o.product_id = p.id " +
-                     "ORDER BY o.created_at DESC";
-        try (Connection conn = DBConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-            while (rs.next()) {
-                orders.add(extractOrderFromResultSet(rs));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return orders;
-    }
-
-    /**
-     * Update payment status
-     */
-    public boolean updatePaymentStatus(Long orderId, String paymentStatus) {
-        String sql = "UPDATE orders SET payment_status = ?, updated_at = NOW() WHERE id = ?";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, paymentStatus);
-            stmt.setLong(2, orderId);
-            return stmt.executeUpdate() > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
-
-    /**
-     * Update order status
-     */
-    public boolean updateOrderStatus(Long orderId, String orderStatus) {
-        String sql = "UPDATE orders SET order_status = ?, updated_at = NOW() WHERE id = ?";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, orderStatus);
-            stmt.setLong(2, orderId);
-
-            boolean updated = stmt.executeUpdate() > 0;
-
-            // If order is completed, mark product as sold
-            if (updated && "COMPLETED".equals(orderStatus)) {
-                Order order = getOrderById(orderId);
-                if (order != null) {
-                    productService.markAsSold(order.getProductId());
-                }
-            }
-
-            return updated;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
-
-    /**
-     * Cancel order
-     */
-    public boolean cancelOrder(Long orderId) {
-        Order order = getOrderById(orderId);
-        if (order == null) {
-            return false;
-        }
-
-        // Update order status to CANCELLED
-        boolean cancelled = updateOrderStatus(orderId, "CANCELLED");
-
-        if (cancelled) {
-            // Mark product as available again
-            productService.markAsAvailable(order.getProductId());
-        }
-
-        return cancelled;
-    }
-
-    private Order extractOrderFromResultSet(ResultSet rs) throws SQLException {
-        Order order = new Order();
-        order.setId(rs.getLong("id"));
-        order.setUserId(rs.getLong("user_id"));
-        order.setProductId(rs.getLong("product_id"));
-        order.setTotalAmount(rs.getBigDecimal("total_amount"));
-        order.setPaymentMethod(rs.getString("payment_method"));
-        order.setPaymentStatus(rs.getString("payment_status"));
-        order.setOrderStatus(rs.getString("order_status"));
-        order.setDeliveryEmail(rs.getString("delivery_email"));
-        order.setDeliveryPhone(rs.getString("delivery_phone"));
-        order.setNote(rs.getString("note"));
-        order.setCreatedAt(rs.getTimestamp("created_at"));
-        order.setUpdatedAt(rs.getTimestamp("updated_at"));
-        order.setUsername(rs.getString("username"));
-        order.setProductName(rs.getString("product_name"));
-        return order;
     }
 }

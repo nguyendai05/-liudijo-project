@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html lang="vi"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Đăng nhập - liudijo</title>
+<title>Admin - Kho stock - liudijo</title>
 <% String ctx = request.getContextPath(); %>
 <link rel="stylesheet" href="<%=ctx%>/assets/css/style.css">
 </head><body>
@@ -16,16 +16,16 @@
 </header>
 <main class="container">
 
-<h1>Đăng nhập</h1>
-<% if (request.getAttribute("error") != null) { %>
-  <p class="error"><%= request.getAttribute("error") %></p>
-<% } %>
-<form method="post" action="<%=ctx%>/auth/login">
-  <label>Email <input type="email" name="email" required></label>
-  <label>Mật khẩu <input type="password" name="password" required></label>
-  <button class="btn">Đăng nhập</button>
+<h1>Kho stock</h1>
+<form method="post">
+  <label>Product ID <input type="number" name="productId" required></label>
+  <label>Type
+    <select name="type"><option>ACCOUNT</option><option>KEY</option></select>
+  </label>
+  <label>Secret (username:pass hoặc key) <textarea name="secret" rows="3" required></textarea></label>
+  <label>Meta (JSON) <textarea name="meta" rows="3"></textarea></label>
+  <button class="btn">+ Thêm</button>
 </form>
-<p>Chưa có tài khoản? <a href="<%=ctx%>/auth/register">Đăng ký</a></p>
 
 </main>
 <script src="<%=ctx%>/assets/js/main.js"></script>

@@ -1,0 +1,89 @@
+-- Minimal schema for liudijo (subset of full design)
+CREATE TABLE Roles (
+    RoleId INT IDENTITY PRIMARY KEY,
+    Name NVARCHAR(50) UNIQUE NOT NULL
+);
+INSERT INTO Roles (Name) VALUES ('CUSTOMER'), ('ADMIN');
+
+CREATE TABLE Users (
+    UserId BIGINT IDENTITY PRIMARY KEY,
+    Email NVARCHAR(255) NOT NULL UNIQUE,
+    PasswordHash VARBINARY(256) NOT NULL,
+    FullName NVARCHAR(120) NULL,
+    RoleId INT NOT NULL REFERENCES Roles(RoleId),
+    IsActive BIT NOT NULL DEFAULT 1,
+    CreatedAt DATETIME2 NOT NULL DEFAULT SYSDATETIME()
+);
+
+CREATE TABLE Products (
+    ProductId BIGINT IDENTITY PRIMARY KEY,
+    CategoryId INT NULL,
+    Name NVARCHAR(255) NOT NULL,
+    Slug NVARCHAR(255) NOT NULL UNIQUE,
+    Type NVARCHAR(20) NOT NULL CHECK (Type IN ('ACCOUNT','KEY','SERVICE')),
+    Description NVARCHAR(MAX) NULL,
+    Price DECIMAL(18,2) NOT NULL,
+    SalePrice DECIMAL(18,2) NULL,
+    Currency CHAR(3) NOT NULL DEFAULT 'VND',
+    IsActive BIT NOT NULL DEFAULT 1,
+    CreatedAt DATETIME2 NOT NULL DEFAULT SYSDATETIME()
+);
+
+CREATE TABLE Orders (
+    OrderId BIGINT IDENTITY PRIMARY KEY,
+    UserId BIGINT NOT NULL REFERENCES Users(UserId),
+    Status NVARCHAR(20) NOT NULL CHECK (Status IN ('PENDING','PAID','FAILED','CANCELLED')),
+    Total DECIMAL(18,2) NOT NULL,
+    Currency CHAR(3) NOT NULL DEFAULT 'VND',
+    PaymentMethod NVARCHAR(30) NULL,
+    PaymentStatus NVARCHAR(20) NOT NULL CHECK (PaymentStatus IN ('INIT','PAID','UNPAID')) DEFAULT 'INIT',
+    PaymentRef NVARCHAR(200) NULL,
+    CreatedAt DATETIME2 NOT NULL DEFAULT SYSDATETIME()
+);
+
+CREATE TABLE OrderItems (
+    OrderItemId BIGINT IDENTITY PRIMARY KEY,
+    OrderId BIGINT NOT NULL REFERENCES Orders(OrderId),
+    ProductId BIGINT NOT NULL REFERENCES Products(ProductId),
+    UnitPrice DECIMAL(18,2) NOT NULL,
+    Quantity INT NOT NULL CHECK (Quantity > 0)
+);
+
+CREATE TABLE StockItems (
+    StockItemId BIGINT IDENTITY PRIMARY KEY,
+    ProductId BIGINT NOT NULL REFERENCES Products(ProductId),
+    Type NVARCHAR(20) NOT NULL CHECK (Type IN ('ACCOUNT','KEY')),
+    SecretEncrypted VARBINARY(MAX) NOT NULL,
+    Meta NVARCHAR(MAX) NULL,
+    IsSold BIT NOT NULL DEFAULT 0,
+    SoldAt DATETIME2 NULL,
+    OrderItemId BIGINT NULL,
+    RowVer ROWVERSION
+);
+
+GO
+CREATE OR ALTER PROCEDURE sp_AssignStockItem
+    @ProductId BIGINT,
+    @OrderItemId BIGINT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+    BEGIN TRAN;
+    DECLARE @StockItemId BIGINT;
+    SELECT TOP 1 @StockItemId = StockItemId
+    FROM StockItems WITH (UPDLOCK, HOLDLOCK)
+    WHERE ProductId = @ProductId AND IsSold = 0
+    ORDER BY StockItemId ASC;
+    IF @StockItemId IS NULL
+    BEGIN
+        ROLLBACK;
+        RAISERROR('Out of stock', 16, 1);
+        RETURN;
+    END
+    UPDATE StockItems
+       SET IsSold = 1, SoldAt = SYSDATETIME(), OrderItemId = @OrderItemId
+     WHERE StockItemId = @StockItemId;
+    COMMIT;
+END
+GO

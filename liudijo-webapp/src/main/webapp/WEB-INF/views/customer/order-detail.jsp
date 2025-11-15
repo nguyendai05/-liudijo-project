@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html lang="vi"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Đăng nhập - liudijo</title>
+<title>Chi tiết đơn hàng - liudijo</title>
 <% String ctx = request.getContextPath(); %>
 <link rel="stylesheet" href="<%=ctx%>/assets/css/style.css">
 </head><body>
@@ -16,16 +16,20 @@
 </header>
 <main class="container">
 
-<h1>Đăng nhập</h1>
-<% if (request.getAttribute("error") != null) { %>
-  <p class="error"><%= request.getAttribute("error") %></p>
+<% com.liudijo.model.Order o = (com.liudijo.model.Order) request.getAttribute("order"); %>
+<h1>Đơn hàng #<%= o.getOrderId() %></h1>
+<p>Trạng thái: <%= o.getStatus() %> / Thanh toán: <%= o.getPaymentStatus() %> / Tổng: <%= o.getTotal() %> ₫</p>
+<% if ("PAID".equals(o.getPaymentStatus()) || "PAID".equals(o.getStatus())) { %>
+<h2>Thông tin bàn giao</h2>
+<ul>
+<% java.util.List<String> secrets = (java.util.List<String>) request.getAttribute("secrets");
+   if (secrets != null) for (String s : secrets) { %>
+  <li><code><%= s %></code></li>
 <% } %>
-<form method="post" action="<%=ctx%>/auth/login">
-  <label>Email <input type="email" name="email" required></label>
-  <label>Mật khẩu <input type="password" name="password" required></label>
-  <button class="btn">Đăng nhập</button>
-</form>
-<p>Chưa có tài khoản? <a href="<%=ctx%>/auth/register">Đăng ký</a></p>
+</ul>
+<% } else { %>
+<p>Đơn chưa thanh toán, chưa thể hiển thị thông tin.</p>
+<% } %>
 
 </main>
 <script src="<%=ctx%>/assets/js/main.js"></script>

@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html lang="vi"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Đăng nhập - liudijo</title>
+<title>Admin - Đơn hàng - liudijo</title>
 <% String ctx = request.getContextPath(); %>
 <link rel="stylesheet" href="<%=ctx%>/assets/css/style.css">
 </head><body>
@@ -16,16 +16,12 @@
 </header>
 <main class="container">
 
-<h1>Đăng nhập</h1>
-<% if (request.getAttribute("error") != null) { %>
-  <p class="error"><%= request.getAttribute("error") %></p>
-<% } %>
-<form method="post" action="<%=ctx%>/auth/login">
-  <label>Email <input type="email" name="email" required></label>
-  <label>Mật khẩu <input type="password" name="password" required></label>
-  <button class="btn">Đăng nhập</button>
+<h1>Đơn hàng</h1>
+<p>(Demo) Bạn có thể nhập ID đơn để đánh dấu đã thanh toán.</p>
+<form method="post">
+  <label>Order ID <input type="number" name="orderId" required></label>
+  <button class="btn">Mark Paid</button>
 </form>
-<p>Chưa có tài khoản? <a href="<%=ctx%>/auth/register">Đăng ký</a></p>
 
 </main>
 <script src="<%=ctx%>/assets/js/main.js"></script>
