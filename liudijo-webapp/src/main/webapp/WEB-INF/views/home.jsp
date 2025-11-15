@@ -61,14 +61,14 @@
             <div class="hero-slide active" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                 <div class="container">
                     <div class="hero-content">
-                        <h1 class="hero-title">Nền tảng bán hàng số #1 Việt Nam</h1>
-                        <p class="hero-subtitle">Mua tài khoản, key phần mềm, dịch vụ online - Giao hàng tức thì, uy tín, bảo mật</p>
+                        <h1 class="hero-title">NỀN TẢNG BÁN HÀNG SỐ #1 VIỆT NAM</h1>
+                        <p class="hero-subtitle">Mua tài khoản, key phần mềm, dịch vụ online<br>Giao hàng tức thì, uy tín, bảo mật</p>
                         <div class="hero-buttons">
                             <a href="<%=ctx%>/products" class="btn btn-primary btn-lg">
-                                <i class="fas fa-rocket"></i> Khám phá ngay
+                                <i class="fas fa-rocket"></i> <span>Khám phá ngay</span>
                             </a>
                             <a href="#features" class="btn btn-secondary btn-lg">
-                                <i class="fas fa-info-circle"></i> Tìm hiểu thêm
+                                <i class="fas fa-info-circle"></i> <span>Tìm hiểu thêm</span>
                             </a>
                         </div>
                     </div>
@@ -78,11 +78,14 @@
             <div class="hero-slide" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
                 <div class="container">
                     <div class="hero-content">
-                        <h1 class="hero-title">Ưu đãi cực khủng</h1>
-                        <p class="hero-subtitle">Giảm giá lên đến 50% cho tất cả sản phẩm - Chỉ trong tuần này!</p>
+                        <h1 class="hero-title">ƯU ĐÃI CỰC KHỦNG</h1>
+                        <p class="hero-subtitle">Giảm giá lên đến 50% cho tất cả sản phẩm<br>Chỉ trong tuần này!</p>
                         <div class="hero-buttons">
                             <a href="<%=ctx%>/products" class="btn btn-primary btn-lg">
-                                <i class="fas fa-tags"></i> Xem ưu đãi
+                                <i class="fas fa-tags"></i> <span>Xem ưu đãi</span>
+                            </a>
+                            <a href="<%=ctx%>/products?type=ACCOUNT" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-percentage"></i> <span>Săn deal hot</span>
                             </a>
                         </div>
                     </div>
@@ -92,11 +95,14 @@
             <div class="hero-slide" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
                 <div class="container">
                     <div class="hero-content">
-                        <h1 class="hero-title">Giao hàng tức thì 24/7</h1>
-                        <p class="hero-subtitle">Nhận sản phẩm ngay sau khi thanh toán - Hỗ trợ 24/7</p>
+                        <h1 class="hero-title">GIAO HÀNG TỨC THÌ 24/7</h1>
+                        <p class="hero-subtitle">Nhận sản phẩm ngay sau khi thanh toán<br>Hỗ trợ khách hàng 24/7</p>
                         <div class="hero-buttons">
                             <a href="<%=ctx%>/products" class="btn btn-primary btn-lg">
-                                <i class="fas fa-bolt"></i> Mua ngay
+                                <i class="fas fa-bolt"></i> <span>Mua ngay</span>
+                            </a>
+                            <a href="#features" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-shield-alt"></i> <span>Cam kết uy tín</span>
                             </a>
                         </div>
                     </div>
@@ -104,13 +110,13 @@
             </div>
         </div>
 
-        <button class="hero-prev"><i class="fas fa-chevron-left"></i></button>
-        <button class="hero-next"><i class="fas fa-chevron-right"></i></button>
+        <button class="hero-prev" aria-label="Slide trước"><i class="fas fa-chevron-left"></i></button>
+        <button class="hero-next" aria-label="Slide tiếp"><i class="fas fa-chevron-right"></i></button>
 
         <div class="hero-dots">
-            <span class="dot active" data-slide="0"></span>
-            <span class="dot" data-slide="1"></span>
-            <span class="dot" data-slide="2"></span>
+            <span class="dot active" data-slide="0" aria-label="Slide 1"></span>
+            <span class="dot" data-slide="1" aria-label="Slide 2"></span>
+            <span class="dot" data-slide="2" aria-label="Slide 3"></span>
         </div>
     </section>
 
@@ -118,7 +124,7 @@
     <section class="categories-section">
         <div class="container">
             <div class="section-header">
-                <h2 class="section-title">Danh mục sản phẩm</h2>
+                <h2 class="section-title"><i class="fas fa-th-large" style="margin-right: 0.5rem; opacity: 0.8;"></i>DANH MỤC SẢN PHẨM</h2>
                 <p class="section-subtitle">Chọn danh mục bạn quan tâm</p>
             </div>
 
@@ -166,7 +172,7 @@
     <section class="products-section">
         <div class="container">
             <div class="section-header">
-                <h2 class="section-title">Sản phẩm nổi bật</h2>
+                <h2 class="section-title"><i class="fas fa-star" style="margin-right: 0.5rem; opacity: 0.8;"></i>SẢN PHẨM NỔI BẬT</h2>
                 <p class="section-subtitle">Những sản phẩm được yêu thích nhất</p>
             </div>
 
@@ -251,7 +257,7 @@
     <section class="features-section" id="features">
         <div class="container">
             <div class="section-header">
-                <h2 class="section-title">Tại sao chọn Liudijo?</h2>
+                <h2 class="section-title"><i class="fas fa-award" style="margin-right: 0.5rem; opacity: 0.8;"></i>TẠI SAO CHỌN LIUDIJO?</h2>
                 <p class="section-subtitle">Những lý do khách hàng tin tưởng chúng tôi</p>
             </div>
 
@@ -295,8 +301,8 @@
     <section class="testimonials-section">
         <div class="container">
             <div class="section-header">
-                <h2 class="section-title">Khách hàng nói gì về chúng tôi</h2>
-                <p class="section-subtitle">Hơn 10,000+ khách hàng hài lòng</p>
+                <h2 class="section-title"><i class="fas fa-comments" style="margin-right: 0.5rem; opacity: 0.8;"></i>KHÁCH HÀNG NÓI GÌ</h2>
+                <p class="section-subtitle">Hơn <span data-count="10000">10,000</span>+ khách hàng hài lòng</p>
             </div>
 
             <div class="testimonials-grid">
