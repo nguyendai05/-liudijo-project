@@ -24,5 +24,5 @@
     <%-- <link rel="stylesheet" href="assets/css/admin.css"> --%>
 
     <!-- Thêm các link font, icon (ví dụ: Font Awesome) nếu có -->
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>

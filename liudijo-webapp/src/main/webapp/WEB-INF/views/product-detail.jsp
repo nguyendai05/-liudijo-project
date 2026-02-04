@@ -91,11 +91,15 @@
                             <input type="hidden" name="action" value="add">
                             <input type="hidden" name="productId" value="<%= p.getProductId() %>">
                             <div class="quantity-selector">
-                                <label>Số lượng:</label>
+                                <label for="qty-input">Số lượng:</label>
                                 <div class="quantity-controls">
-                                    <button type="button" class="qty-btn" onclick="this.parentNode.querySelector('input').stepDown()">-</button>
-                                    <input type="number" name="qty" value="1" min="1" class="qty-input">
-                                    <button type="button" class="qty-btn" onclick="this.parentNode.querySelector('input').stepUp()">+</button>
+                                    <button type="button" class="qty-btn" onclick="this.parentNode.querySelector('input').stepDown()" aria-label="Giảm số lượng">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                    <input type="number" id="qty-input" name="qty" value="1" min="1" class="qty-input" aria-label="Số lượng">
+                                    <button type="button" class="qty-btn" onclick="this.parentNode.querySelector('input').stepUp()" aria-label="Tăng số lượng">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
                                 </div>
                             </div>
                             <button type="submit" class="btn-add-to-cart">
